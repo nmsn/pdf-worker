@@ -23,6 +23,9 @@ export function App() {
             <Link className="nav-link" to="/about">
               About
             </Link>
+            <Link className="nav-link" to="/pdf">
+              PDF
+            </Link>
           </nav>
         </header>
 
