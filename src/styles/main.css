@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", "Inter", "Segoe UI", sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer components {
+  .nav-link {
+    @apply rounded-full border border-stone-900/10 px-4 py-2 text-stone-700 transition hover:border-stone-900/20 hover:bg-stone-950 hover:text-stone-50;
+  }
+}
