@@ -51,7 +51,11 @@ const CATALOG_TITLE_SIZE = 16;
 const CATALOG_ITEM_SIZE = 12;
 
 function getWorkerCount(input?: number): number {
-  return Math.max(1, input ?? Math.min(navigator.hardwareConcurrency || 4, 4));
+  if (input !== undefined) {
+    return Math.max(1, input);
+  }
+  const cores = navigator.hardwareConcurrency || 4;
+  return Math.max(1, cores - 1);
 }
 
 function getHeadingSize(level: number): number {
