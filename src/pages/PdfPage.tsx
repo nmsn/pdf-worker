@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { exportPdf } from '../../lib/pdf';
 import { exportPdfWithWorker } from '../../lib/pdf-worker';
+import { exportPdfWithWorkerV3 } from '../../lib/pdf-worker-v3';
 import type { IHeading, ITable, IImg, IPage, IText } from '../../lib/pdf';
 
 const testImg = '/images/test_1.png';
@@ -9,69 +10,69 @@ const testImg2 = '/images/pic.jpg';
 export function PdfPage() {
   const [loading, setLoading] = useState(false);
   const [workerLoading, setWorkerLoading] = useState(false);
+  const [workerV3Loading, setWorkerV3Loading] = useState(false);
+
+  const buildSampleData = (): (IHeading | ITable | IImg | IPage | IText)[] => [
+    {
+      type: 'heading',
+      data: { value: 'Sample Document', level: 1 }
+    },
+    {
+      type: 'text',
+      data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.' }
+    },
+    {
+      type: 'table',
+      data: {
+        title: 'Sample Table',
+        value: {
+          head: ['Name', 'Description', 'Status'],
+          body: [
+            ['Project 1', 'Description 1', 'Completed'],
+            ['Project 2', 'Description 2', 'In Progress'],
+            ['Project 3', 'Description 3', 'Not Started'],
+            ['Project 4', 'Description 4', 'Not Started'],
+            ['Project 5', 'Description 5', 'Not Started'],
+          ]
+        }
+      }
+    },
+    {
+      type: 'heading',
+      data: { value: 'Image Example', level: 2 }
+    },
+    {
+      type: 'text',
+      data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.', options: { indent: true } }
+    },
+    {
+      type: 'heading',
+      data: { value: 'Image Example', level: 2 }
+    },
+    {
+      type: 'img',
+      data: {
+        value: testImg,
+        options: { align: 'center', width: 200 }
+      }
+    },
+    {
+      type: 'text',
+      data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.', options: { indent: true } }
+    },
+    {
+      type: 'img',
+      data: {
+        value: testImg2,
+        options: { align: 'center', width: 200 }
+      }
+    }
+  ];
 
   const handleExport = async () => {
     setLoading(true);
     try {
-      // 示例数据
-      const data: (IHeading | ITable | IImg | IPage | IText)[] = [
-        {
-          type: 'heading',
-          data: { value: 'Sample Document', level: 1 }
-        },
-        {
-          type: 'text',
-          data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.' }
-        },
-        {
-          type: 'table',
-          data: {
-            title: 'Sample Table',
-            value: {
-              head: ['Name', 'Description', 'Status'],
-              body: [
-                ['Project 1', 'Description 1', 'Completed'],
-                ['Project 2', 'Description 2', 'In Progress'],
-                ['Project 3', 'Description 3', 'Not Started'],
-                ['Project 4', 'Description 4', 'Not Started'],
-                ['Project 5', 'Description 5', 'Not Started'],
-              ]
-            }
-          }
-        },
-        {
-          type: 'heading',
-          data: { value: 'Image Example', level: 2 }
-        },
-        {
-          type: 'text',
-          data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.', options: { indent: true } }
-        },
-        {
-          type: 'heading',
-          data: { value: 'Image Example', level: 2 }
-        },
-        {
-          type: 'img',
-          data: {
-            value: testImg,
-            options: { align: 'center', width: 200 }
-          }
-        },
-        {
-          type: 'text',
-          data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.', options: { indent: true } }
-        },
-        {
-          type: 'img',
-          data: {
-            value: testImg2,
-            options: { align: 'center', width: 200 }
-          }
-        }
-      ];
-
-      await exportPdf(data, 'Test Article');
+      await exportPdf(buildSampleData(), 'Test Article');
     } catch (error) {
       console.error('导出失败:', error);
     } finally {
@@ -82,69 +83,22 @@ export function PdfPage() {
   const handleWorkerExport = async () => {
     setWorkerLoading(true);
     try {
-      // 示例数据
-      const data: (IHeading | ITable | IImg | IPage | IText)[] = [
-        {
-          type: 'heading',
-          data: { value: 'Sample Document', level: 1 }
-        },
-        {
-          type: 'text',
-          data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.' }
-        },
-        {
-          type: 'table',
-          data: {
-            title: 'Sample Table',
-            value: {
-              head: ['Name', 'Description', 'Status'],
-              body: [
-                ['Project 1', 'Description 1', 'Completed'],
-                ['Project 2', 'Description 2', 'In Progress'],
-                ['Project 3', 'Description 3', 'Not Started'],
-                ['Project 4', 'Description 4', 'Not Started'],
-                ['Project 5', 'Description 5', 'Not Started'],
-              ]
-            }
-          }
-        },
-        {
-          type: 'heading',
-          data: { value: 'Image Example', level: 2 }
-        },
-        {
-          type: 'text',
-          data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.', options: { indent: true } }
-        },
-        {
-          type: 'heading',
-          data: { value: 'Image Example', level: 2 }
-        },
-        {
-          type: 'img',
-          data: {
-            value: testImg,
-            options: { align: 'center', width: 200 }
-          }
-        },
-        {
-          type: 'text',
-          data: { value: 'This is a sample PDF export page. Click the button above to export the PDF file. This is a sample PDF export page. Click the button above to export the PDF file.', options: { indent: true } }
-        },
-        {
-          type: 'img',
-          data: {
-            value: testImg2,
-            options: { align: 'center', width: 200 }
-          }
-        }
-      ];
-
-      await exportPdfWithWorker(data, 'Test Article (Worker)');
+      await exportPdfWithWorker(buildSampleData(), 'Test Article (Worker)');
     } catch (error) {
       console.error('Worker 导出失败:', error);
     } finally {
       setWorkerLoading(false);
+    }
+  };
+
+  const handleWorkerV3Export = async () => {
+    setWorkerV3Loading(true);
+    try {
+      await exportPdfWithWorkerV3(buildSampleData(), 'Test Article (Worker V3)');
+    } catch (error) {
+      console.error('Worker V3 导出失败:', error);
+    } finally {
+      setWorkerV3Loading(false);
     }
   };
 
@@ -195,6 +149,24 @@ export function PdfPage() {
                   </>
                 ) : (
                   'Worker方案导出'
+                )}
+              </button>
+
+              <button
+                onClick={handleWorkerV3Export}
+                disabled={workerV3Loading}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {workerV3Loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    导出中...
+                  </>
+                ) : (
+                  'Worker V3方案导出'
                 )}
               </button>
             </div>
