@@ -6,14 +6,14 @@ import type { Styles } from "jspdf-autotable";
 
 import type { IHeading, IImg, IPage, ITable, IText } from "./pdf";
 import type {
-  ImagePreloaderWorkerApi,
   PageInstructionSetV3,
   PdfExportItem,
-  PdfRendererWorkerApi,
   PreparedImage,
   TableInstructionV3,
   TextInstructionV3,
 } from "./workers/pdf-worker-types";
+import type { ImagePreloaderWorkerApi } from "./workers/image-preloader.worker";
+import type { PdfRendererWorkerApi } from "./workers/pdf-renderer.worker";
 
 interface ExportOptionsV3 {
   headerImg?: string;
@@ -34,6 +34,8 @@ type WorkerRef<T> = {
   remote: Comlink.Remote<T>;
   instance: Worker;
 };
+
+import { timingV3 } from './timing';
 
 const MARGIN = 20;
 const SECTION_GAP = 14;
@@ -517,15 +519,28 @@ export async function exportPdfWithWorkerV3(
   }
 
   console.log("\n========== [Worker V3 实验方案] 开始导出 PDF ==========");
+  timingV3.reset();
+  timingV3.start('图片预加载');
   const imageMap = await preloadImagesV3(imageUrls, getWorkerCount(options.imageWorkerCount));
+  timingV3.end('图片预加载');
+
+  timingV3.start('指令构建');
   const { pageSize, pages } = buildInstructionPages(data, imageMap, options);
+  timingV3.end('指令构建');
+
+  timingV3.start('Worker池渲染');
   const buffers = await renderPagesWithWorkerPool(
     pageSize,
     pages,
     imageMap,
     getWorkerCount(options.workerCount),
   );
+  timingV3.end('Worker池渲染');
+
+  timingV3.start('PDF合并');
   const merged = await mergePdfBuffers(buffers);
+  timingV3.end('PDF合并');
+
   downloadPdf(merged, title);
-  console.log("[Worker V3 实验方案] 导出完成");
+  timingV3.summary();
 }

@@ -54,11 +54,3 @@ export interface PageRenderPayloadV3 {
   instructions: DrawInstructionV3[];
   imageMap: Record<string, PreparedImage>;
 }
-
-export interface ImagePreloaderWorkerApi {
-  preloadImages(urls: string[]): Promise<PreparedImage[]>;
-}
-
-export interface PdfRendererWorkerApi {
-  renderPage(payload: PageRenderPayloadV3): Promise<ArrayBuffer>;
-}

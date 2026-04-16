@@ -1,6 +1,10 @@
 import * as Comlink from "comlink";
 
-import type { ImagePreloaderWorkerApi, PreparedImage } from "./pdf-worker-types";
+import type { PreparedImage } from "./pdf-worker-types";
+
+export interface ImagePreloaderWorkerApi {
+  preloadImages(urls: string[]): Promise<PreparedImage[]>;
+}
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {

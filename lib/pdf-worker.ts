@@ -16,76 +16,7 @@ console.log(`  - OffscreenCanvas: ${SUPPORTS_OFFSCREEN_CANVAS ? '✅' : '❌'}`)
 console.log(`  - createImageBitmap: ${SUPPORTS_IMAGE_BITMAP ? '✅' : '❌'}`);
 console.log(`  - 优化方案可用: ${SUPPORTS_WORKER_OPTIMIZATION ? '✅' : '❌'}`);
 
-// ============================================================
-// 时间记录工具
-// ============================================================
-
-interface TimingRecord {
-  name: string;
-  startTime: number;
-  endTime?: number;
-  duration?: number;
-}
-
-class TimingLogger {
-  private records: TimingRecord[] = [];
-  private currentRecord: TimingRecord | null = null;
-  private counters: Map<string, number> = new Map();
-
-  start(name: string): void {
-    const startTime = performance.now();
-    this.currentRecord = { name, startTime };
-    console.log(`[Worker优化方案] ⏱️ 开始: ${name}`);
-  }
-
-  end(name: string): number {
-    const endTime = performance.now();
-    const record = this.records.find(r => r.name === name && !r.endTime) || this.currentRecord;
-
-    if (record && record.name === name) {
-      record.endTime = endTime;
-      record.duration = endTime - record.startTime;
-      console.log(`[Worker优化方案] ⏱️ 完成: ${name} - 耗时: ${record.duration.toFixed(2)}ms`);
-      return record.duration;
-    }
-
-    console.warn(`[Worker优化方案] ⚠️ 未找到匹配的计时记录: ${name}`);
-    return 0;
-  }
-
-  log(name: string, duration: number): void {
-    console.log(`[Worker优化方案] ⏱️ ${name}: ${duration.toFixed(2)}ms`);
-  }
-
-  increment(name: string): number {
-    const count = (this.counters.get(name) || 0) + 1;
-    this.counters.set(name, count);
-    return count;
-  }
-
-  getCount(name: string): number {
-    return this.counters.get(name) || 0;
-  }
-
-  summary(): void {
-    console.log('\n========== [Worker优化方案] 执行时间汇总 ==========');
-    let total = 0;
-    this.records.forEach(r => {
-      if (r.duration) {
-        console.log(`  ${r.name}: ${r.duration.toFixed(2)}ms`);
-        total += r.duration;
-      }
-    });
-    console.log(`  总计: ${total.toFixed(2)}ms`);
-    console.log('各操作调用次数:');
-    this.counters.forEach((count, name) => {
-      console.log(`  ${name}: ${count} 次`);
-    });
-    console.log('=============================================\n');
-  }
-}
-
-const timing = new TimingLogger();
+import { timingWorker } from './timing';
 
 // ============================================================
 // 类型定义
@@ -1004,14 +935,14 @@ export class PDFWorkerV2 {
 
     if (urls.length === 0) return;
 
-    timing.start('图片预加载（预加载器）');
+    timingWorker.start('图片预加载（预加载器）');
     try {
       await this.imagePreloader.preload(urls);
       console.log(`[Worker优化方案] ✅ 图片预加载完成，共 ${urls.length} 张图片`);
     } catch (error) {
       console.error('[Worker优化方案] 图片预加载失败:', error);
     }
-    timing.end('图片预加载（预加载器）');
+    timingWorker.end('图片预加载（预加载器）');
   }
 
   private async collectHeaderInstructions(): Promise<DrawInstructionV2[]> {
@@ -1332,14 +1263,14 @@ export class PDFWorkerV2 {
     // 预加载图片（现在使用预加载器）
     await this.preloadImages();
 
-    timing.start('指令收集');
+    timingWorker.start('指令收集');
     const pageInstructions = this.getPageInstructions();
-    timing.end('指令收集');
+    timingWorker.end('指令收集');
 
     console.log(`[Worker优化方案] 📊 页面数量: ${pageInstructions.length}`);
     console.log(`[Worker优化方案] 📊 图片数量: ${this.imageInfos.length}`);
 
-    timing.start('Worker 并行渲染');
+    timingWorker.start('Worker 并行渲染');
 
     const results: ArrayBuffer[] = [];
 
@@ -1568,14 +1499,14 @@ export class PDFWorkerV2 {
       }
     }
 
-    timing.end('Worker 并行渲染');
+    timingWorker.end('Worker 并行渲染');
 
     return results;
   }
 
   // 合并 PDF
   async mergePDFs(buffers: ArrayBuffer[]): Promise<Uint8Array> {
-    timing.start('PDF 合并');
+    timingWorker.start('PDF 合并');
     const finalDoc = await PDFDocument.create();
 
     for (const buffer of buffers) {
@@ -1585,13 +1516,13 @@ export class PDFWorkerV2 {
     }
 
     const result = await finalDoc.save();
-    timing.end('PDF 合并');
+    timingWorker.end('PDF 合并');
     return result;
   }
 
   // 主导出方法
   async save(name: string): Promise<void> {
-    timing.start('总耗时');
+    timingWorker.start('总耗时');
     console.log(`[Worker优化方案] 使用 ${this.workerCount} 个 PDF Worker + ${this.imageWorkerCount} 个图片 Worker`);
 
     const buffers = await this.renderWithWorkers();
@@ -1617,8 +1548,8 @@ export class PDFWorkerV2 {
     a.click();
     URL.revokeObjectURL(url);
 
-    timing.end('总耗时');
-    timing.summary();
+    timingWorker.end('总耗时');
+    timingWorker.summary();
   }
 }
 
@@ -1713,13 +1644,13 @@ export async function exportPdfWithWorker(
     ...options,
   };
 
-  timing.start('初始化 PDF Worker');
+  timingWorker.start('初始化 PDF Worker');
   const pdf = new PDFWorkerV2(opts);
-  timing.end('初始化 PDF Worker');
+  timingWorker.end('初始化 PDF Worker');
 
   let isEmptyPage = true;
 
-  timing.start('收集所有指令');
+  timingWorker.start('收集所有指令');
   for (const item of data) {
     if (item.type === 'heading') {
       if (!isEmptyPage) {
@@ -1749,7 +1680,7 @@ export async function exportPdfWithWorker(
     }
     isEmptyPage = item.type === 'heading';
   }
-  timing.end('收集所有指令');
+  timingWorker.end('收集所有指令');
 
   // 添加目录
   const catalogStartTime = performance.now();

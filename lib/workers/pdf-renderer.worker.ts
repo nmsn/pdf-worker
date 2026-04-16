@@ -4,9 +4,13 @@ import autoTable from "jspdf-autotable";
 
 import type {
   DrawInstructionV3,
-  PdfRendererWorkerApi,
+  PageRenderPayloadV3,
   PreparedImage,
 } from "./pdf-worker-types";
+
+export interface PdfRendererWorkerApi {
+  renderPage(payload: PageRenderPayloadV3): Promise<ArrayBuffer>;
+}
 
 function toJsPdfFormat(mimeType: PreparedImage["mimeType"]): "JPEG" | "PNG" {
   return mimeType === "image/png" ? "PNG" : "JPEG";

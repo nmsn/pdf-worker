@@ -7,72 +7,7 @@ import { autoTable } from 'jspdf-autotable'
 //   getBackCoverImg,
 // } from './export-utils';
 
-// ============================================================
-// 时间记录工具
-// ============================================================
-
-interface TimingRecord {
-  name: string;
-  startTime: number;
-  endTime?: number;
-  duration?: number;
-}
-
-class TimingLogger {
-  private records: TimingRecord[] = [];
-  private currentRecord: TimingRecord | null = null;
-  private counters: Map<string, number> = new Map();
-
-  start(name: string): void {
-    const startTime = performance.now();
-    this.currentRecord = { name, startTime };
-    console.log(`[传统方案] ⏱️ 开始: ${name}`);
-  }
-
-  end(name: string): number {
-    const endTime = performance.now();
-    const record = this.records.find(r => r.name === name && !r.endTime) || this.currentRecord;
-    
-    if (record && record.name === name) {
-      record.endTime = endTime;
-      record.duration = endTime - record.startTime;
-      console.log(`[传统方案] ⏱️ 完成: ${name} - 耗时: ${record.duration.toFixed(2)}ms`);
-      return record.duration;
-    }
-    
-    console.warn(`[传统方案] ⚠️ 未找到匹配的计时记录: ${name}`);
-    return 0;
-  }
-
-  log(name: string, duration: number): void {
-    console.log(`[传统方案] ⏱️ ${name}: ${duration.toFixed(2)}ms`);
-  }
-
-  increment(name: string): number {
-    const count = (this.counters.get(name) || 0) + 1;
-    this.counters.set(name, count);
-    return count;
-  }
-
-  getCount(name: string): number {
-    return this.counters.get(name) || 0;
-  }
-
-  summary(): void {
-    console.log('\n========== [传统方案] 执行时间汇总 ==========');
-    let total = 0;
-    this.records.forEach(r => {
-      if (r.duration) {
-        console.log(`  ${r.name}: ${r.duration.toFixed(2)}ms`);
-        total += r.duration;
-      }
-    });
-    console.log(`  总计: ${total.toFixed(2)}ms`);
-    console.log('=============================================\n');
-  }
-}
-
-const timing = new TimingLogger();
+import { timing } from './timing';
 
 /**
  * 获取封面创建日期
